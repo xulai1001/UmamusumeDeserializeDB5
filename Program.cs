@@ -20,9 +20,11 @@ namespace UmamusumeDeserializeDB5
             Directory.SetCurrentDirectory("./output/ja-JP/");
             new CardName().Generate();
             var stories = new Events().Generate();
+            
             var jpNewEvents = await new NewEvents().Generate(stories);
             NewEvents.TrainerIsMale = !NewEvents.TrainerIsMale;
             jpNewEvents = await new NewEvents().Generate(stories);
+            
             new SkillDataMgr().Generate();
             new ClimaxItems().Generate();
             new TalentSkillSet().Generate();
@@ -41,7 +43,7 @@ namespace UmamusumeDeserializeDB5
                 }
                 File.WriteAllBytes(@$"../日版数据v{DateTime.Now:yyMMddHHmmss}.zip", ms.ToArray());
             }
-
+            /*
             Directory.CreateDirectory("../../output/zh-TW/");
             Directory.SetCurrentDirectory("../../output/zh-TW/");
             Data.UseTw();
@@ -67,6 +69,7 @@ namespace UmamusumeDeserializeDB5
                 }
                 File.WriteAllBytes(@$"../台版数据v{DateTime.Now:yyMMddHHmmss}.zip", ms.ToArray());
             }
+            */
             sw.Stop();
             AnsiConsole.WriteLine($"总用时: {sw.Elapsed.TotalSeconds} 秒");
         }

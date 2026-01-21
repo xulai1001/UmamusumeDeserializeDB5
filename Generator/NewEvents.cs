@@ -9,7 +9,7 @@ namespace UmamusumeDeserializeDB5.Generator
     internal partial class NewEvents : GeneratorBase
     {
         public static bool TrainerIsMale = true;
-        public static string STORY_DATA_PATH = @"K:\repos\UmamusumeStoryDataExtractor\UmamusumeStoryDataExtractor\bin\Release\net8.0\Ext_Jp\story\data\";
+        public static string STORY_DATA_PATH = @"F:\UmaAI\UMA-Unpack\story\story\data\";
         readonly string SCENARIO_EVENT_PATH = Path.Combine(STORY_DATA_PATH, "40");
         readonly string CHARACTER_EVENT_PATH = Path.Combine(STORY_DATA_PATH, "50");
         readonly string SUPPORT_CARD_R_EVENT_PATH = Path.Combine(STORY_DATA_PATH, "80");
@@ -184,7 +184,8 @@ namespace UmamusumeDeserializeDB5.Generator
                 localizedUmaNames = [];
                 localizedSkillNames = [];
                 var jp = new Data(Data.MDB_JP_FILEPATH);
-                var tw = new Data(Data.MDB_TW_FILEPATH);
+                //var tw = new Data(Data.MDB_TW_FILEPATH);
+                /*
                 foreach (var i in jp.TextData.Where(x => x.category == 75))
                 {
                     localizedUmaNames.Add(i.text, tw.TextData.FirstOrDefault(x => x.category == 75 && x.index == i.index)?.text ?? i.text);
@@ -193,6 +194,7 @@ namespace UmamusumeDeserializeDB5.Generator
                 {
                     localizedSkillNames.TryAdd(i.text, tw.TextData.FirstOrDefault(x => x.category == 47 && x.index == i.index)?.text ?? i.text);
                 }
+                */
             }
             s = s.Replace("◯", "○");
             if (!Data.IsTw) return s;

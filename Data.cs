@@ -5,11 +5,13 @@ namespace UmamusumeDeserializeDB5
 {
     public class Data
     {
-        public static readonly string MDB_JP_FILEPATH = @"G:\DMM\Umamusume\umamusume_Data\Persistent\master\master.mdb";
+        // public static readonly string MDB_JP_FILEPATH = @"G:\DMM\Umamusume\umamusume_Data\Persistent\master\master.mdb";
+        public static readonly string MDB_JP_FILEPATH = @"C:\Users\Curran\AppData\LocalLow\Cygames\umamusume\master\master.mdb";
         public static readonly string MDB_TW_FILEPATH = @"G:\tw_files\files\master\master.mdb";
 
         public static Data JP = new(MDB_JP_FILEPATH);
-        public static Data TW = new(MDB_TW_FILEPATH);
+        //public static Data TW = new(MDB_TW_FILEPATH);
+        public static Data TW = null;
 
         public static bool IsTw = false;
 
@@ -291,7 +293,8 @@ namespace UmamusumeDeserializeDB5
             foreach (var textData in TW.TextData.Where(x => x.category != 290 && x.category != 47)) // 不需要改技能进化的条件
             {
                 var jp = JP.TextData.FirstOrDefault(x => x.index == textData.index && x.category == textData.category);
-                jp?.text = textData.text;
+                if (jp is not null)
+                    jp.text = textData.text;
             }
 
             foreach (var idToName in TW.IdToName)
