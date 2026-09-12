@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 namespace UmamusumeDeserializeDB5.Generator
 {
@@ -17,102 +17,73 @@ namespace UmamusumeDeserializeDB5.Generator
         public void Generate()
         {
             var list = new List<SkillUpgradeSpeciality>();
-            var conditions = Data.JP.SkillUpgradeConditionTables.GroupBy(x => x.description_id).ToDictionary(x => x.Key, x => x.Select(y => y.id).ToArray());
+            var conditions = Data.JP.SkillUpgradeConditionTables.GroupBy(x => x.description_id).ToDictionary(x => x.Key, x => x.ToArray());
             foreach (var i in Data.JP.SkillUpgradeSpecialityTable)
             {
-                var conds = conditions[i.skill_id].Select(conditionId =>
+                var conds = conditions[i.skill_id].Select(row =>
                 {
-                    var conditionText = Data.JP.TextData.First(x => x.category == 290 && x.index == conditionId).text.Replace("\t", string.Empty);
+                    var condition = new UpgradeCondition
+                    {
+                        ConditionId = row.id,
+                        Group = row.num
+                    };
+                    var conditionText = Data.JP.TextData.First(x => x.category == 290 && x.index == row.id).text.Replace("\t", string.Empty);
                     if (conditionText.Contains('＜') && conditionText.Contains('＞'))
                     {
                         var regex = Proper.Match(conditionText);
-                        return new UpgradeCondition
+                        condition.Type = UpgradeCondition.ConditionType.Proper;
+                        condition.Requirement = regex.Groups[1].Value switch
                         {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Proper,
-                            Requirement = regex.Groups[1].Value switch
-                            {
-                                "逃げ" => 1,
-                                "先行" => 2,
-                                "差し" => 3,
-                                "追込" => 4,
-                                "短距離" => 5,
-                                "マイル" => 6,
-                                "中距離" => 7,
-                                "長距離" => 8,
-                                "ダート" => 9
-                            },
-                            AdditionalRequirement = long.Parse(regex.Groups[3].Value)
+                            "逃げ" => 1,
+                            "先行" => 2,
+                            "差し" => 3,
+                            "追込" => 4,
+                            "短距離" => 5,
+                            "マイル" => 6,
+                            "中距離" => 7,
+                            "長距離" => 8,
+                            "ダート" => 9
                         };
+                        condition.AdditionalRequirement = long.Parse(regex.Groups[3].Value);
                     }
                     else if (conditionText.Contains("を所持する"))
                     {
                         var regex = Specific.Match(conditionText).Groups[1].Value;
                         var skillId = Data.JP.TextData.First(x => x.category == 47 && x.text == regex).index;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Specific,
-                            Requirement = skillId
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Specific;
+                        condition.Requirement = skillId;
                     }
                     else if (conditionText.Contains("速度が上がるスキル"))
                     {
                         var regex = Speed.Match(conditionText).Groups[1].Value;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Speed,
-                            Requirement = long.Parse(regex)
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Speed;
+                        condition.Requirement = long.Parse(regex);
                     }
                     else if (conditionText.Contains("持久力が回復する"))
                     {
                         var regex = Recovery.Match(conditionText).Groups[1].Value;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Recovery,
-                            Requirement = long.Parse(regex)
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Recovery;
+                        condition.Requirement = long.Parse(regex);
                     }
                     else if (conditionText.Contains("加速力が上がるスキル"))
                     {
                         var regex = Acceleration.Match(conditionText).Groups[1].Value;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Acceleration,
-                            Requirement = long.Parse(regex)
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Acceleration;
+                        condition.Requirement = long.Parse(regex);
                     }
                     else if (conditionText.Contains("コース取りがうまくなる"))
                     {
                         var regex = Lane.Match(conditionText).Groups[1].Value;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Lane,
-                            Requirement = long.Parse(regex)
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Lane;
+                        condition.Requirement = long.Parse(regex);
                     }
                     else if (conditionText.Contains("能力を引き出すスキル"))
                     {
                         var regex = Stat.Match(conditionText).Groups[1].Value;
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                            Type = UpgradeCondition.ConditionType.Stat,
-                            Requirement = long.Parse(regex)
-                        };
+                        condition.Type = UpgradeCondition.ConditionType.Stat;
+                        condition.Requirement = long.Parse(regex);
                     }
-                    else
-                    {
-                        return new UpgradeCondition
-                        {
-                            ConditionId = conditionId,
-                        };
-                    }
+                    return condition;
                 });
                 var obj = new SkillUpgradeSpeciality
                 {

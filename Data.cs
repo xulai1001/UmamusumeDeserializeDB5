@@ -1,4 +1,4 @@
-﻿using System.Data.SQLite;
+using System.Data.SQLite;
 using UmamusumeDeserializeDB5.Generator;
 
 namespace UmamusumeDeserializeDB5
@@ -6,7 +6,7 @@ namespace UmamusumeDeserializeDB5
     public class Data
     {
         public static readonly string MDB_JP_FILEPATH = @"G:\DMM\Umamusume\umamusume_Data\Persistent\master\master.mdb";
-        public static readonly string MDB_TW_FILEPATH = @"G:\tw_files\files\master\master.mdb";
+        public static readonly string MDB_TW_FILEPATH = @"G:\KOMOE Game\komoemumamusume\komoemumamusume Game\komoeumamusume_Data\Persistent\master\master.mdb";
 
         public static Data JP = new(MDB_JP_FILEPATH);
         public static Data TW = new(MDB_TW_FILEPATH);
@@ -333,7 +333,8 @@ namespace UmamusumeDeserializeDB5
         /// 条件类型
         /// </summary>
         public ConditionType Type;
-        /// 组别，即数据库中的num，游戏中的二选一
+        /// <summary>
+        /// 数据库中的num，同组条件取或，不同组取且
         /// </summary>
         public long Group;
         /// <summary>
@@ -347,6 +348,9 @@ namespace UmamusumeDeserializeDB5
 
         public enum ConditionType
         {
+            /// <summary>
+            /// 仅由服务器判定，不做本地预测
+            /// </summary>
             None,
             /// <summary>
             /// 需要学习指定适性(距离、场地、跑法)的技能
