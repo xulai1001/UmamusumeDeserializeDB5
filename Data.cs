@@ -1,17 +1,86 @@
 using System.Data.SQLite;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UmamusumeDeserializeDB5.Generator;
 
 namespace UmamusumeDeserializeDB5
 {
+    public class DataConfig
+    {
+        public const string DEFAULT_PATH = "appsettings.default.json";
+        public const string LOCAL_PATH = "appsettings.json";
+
+        public string JpDbPath { get; set; } = string.Empty;
+        public string TwDbPath { get; set; } = string.Empty;
+        public bool UseTw { get; set; } = false;
+        public string StoryDataPath { get; set; } = string.Empty;
+
+        public static DataConfig Load()
+        {
+            if (!File.Exists(DEFAULT_PATH))
+                throw new FileNotFoundException($"未找到默认配置文件: {DEFAULT_PATH}", DEFAULT_PATH);
+
+            // 默认配置作为基础，本地配置按字段覆盖（深度合并）
+            var defaultJson = JObject.Parse(File.ReadAllText(DEFAULT_PATH));
+            if (File.Exists(LOCAL_PATH))
+            {
+                var localJson = JObject.Parse(File.ReadAllText(LOCAL_PATH));
+                defaultJson.Merge(localJson, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Replace,
+                    PropertyNameComparison = StringComparison.OrdinalIgnoreCase
+                });
+            }
+            var config = defaultJson.ToObject<DataConfig>()
+                ?? throw new InvalidOperationException("配置文件解析失败");
+
+            // 校验配置中引用的文件路径（一次收集所有错误，避免用户多次试错）
+            var missing = new List<string>();
+            if (string.IsNullOrWhiteSpace(config.JpDbPath))
+                missing.Add("JpDbPath 未配置");
+            else if (!File.Exists(config.JpDbPath))
+                missing.Add($"JpDbPath 指定的文件不存在: {config.JpDbPath}");
+
+            if (config.UseTw)
+            {
+                if (string.IsNullOrWhiteSpace(config.TwDbPath))
+                    missing.Add("TwDbPath 未配置 (UseTw = true)");
+                else if (!File.Exists(config.TwDbPath))
+                    missing.Add($"TwDbPath 指定的文件不存在: {config.TwDbPath}");
+            }
+
+            if (string.IsNullOrWhiteSpace(config.StoryDataPath))
+                missing.Add("StoryDataPath 未配置");
+            else if (!Directory.Exists(config.StoryDataPath))
+                missing.Add($"StoryDataPath 指定的目录不存在: {config.StoryDataPath}");
+
+            if (missing.Count > 0)
+                throw new InvalidOperationException(
+                    "配置文件校验失败：\n  - " + string.Join("\n  - ", missing) +
+                    $"\n请修改 {LOCAL_PATH} (字段会被合并到 {DEFAULT_PATH} 之上)");
+
+            return config;
+        }
+    }
+
     public class Data
     {
-        public static readonly string MDB_JP_FILEPATH = @"G:\DMM\Umamusume\umamusume_Data\Persistent\master\master.mdb";
-        public static readonly string MDB_TW_FILEPATH = @"G:\KOMOE Game\komoemumamusume\komoemumamusume Game\komoeumamusume_Data\Persistent\master\master.mdb";
+        public static DataConfig Config = null!;
 
-        public static Data JP = new(MDB_JP_FILEPATH);
-        public static Data TW = new(MDB_TW_FILEPATH);
+        public static string MDB_JP_FILEPATH => Config.JpDbPath;
+        public static string MDB_TW_FILEPATH => Config.TwDbPath;
 
-        public static bool IsTw = false;
+        public static Data JP = null!;
+        public static Data TW = null!;
+
+        public static bool IsTw => Config.UseTw;
+
+        public static void Initialize()
+        {
+            Config = DataConfig.Load();
+            JP = new(MDB_JP_FILEPATH);
+            TW = Config.UseTw ? new(MDB_TW_FILEPATH) : null!;
+        }
 
         public List<TextData> TextData;
         public Dictionary<long, string> IdToName = [];
